@@ -1,0 +1,28 @@
+<!doctype html>
+<!-- UMBRA-Servergrafiken: ?v=banner (960x540, Server-Banner) | splash (1920x1080, Einladungs-Hintergrund). Schriftzug wie Server-Icon. -->
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400&display=block">
+<style>
+  html, body { margin: 0; background: #070304; overflow: hidden; }
+  .stage { position: relative; overflow: hidden; background: radial-gradient(70% 90% at 50% 45%, #1a0709 0%, #0b0405 55%, #050203 100%); color: #f2efe8; }
+  .ring { position: absolute; left: 50%; top: 50%; border-radius: 50%; border: 1px solid rgba(200,196,190,.14); transform: translate(-50%, -50%); }
+  .mark { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: grid; justify-items: center; }
+  .mark span { font-family: Jost, sans-serif; font-weight: 300; color: #ece8e2; margin-right: -.62em; letter-spacing: .62em; }
+  .mark i { display: block; background: #b3262d; }
+  .line { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: linear-gradient(90deg, rgba(196,42,49,0), #c42a31 40%, #c42a31 60%, rgba(196,42,49,0)); opacity: .8; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: overlay; opacity: .35; }
+</style>
+<div class="stage" id="s"></div>
+<script>
+  const v = new URLSearchParams(location.search).get('v') || 'banner';
+  const [W, H] = v === 'splash' ? [1920, 1080] : [960, 540];
+  const s = document.getElementById('s');
+  s.style.cssText = `width:${W}px;height:${H}px`;
+  const fs = W * .045, ring = H * .78;
+  s.innerHTML = `<div class="ring" style="width:${ring}px;height:${ring}px"></div>
+    <div class="mark" style="gap:${fs * .9}px"><span style="font-size:${fs}px">UMBRΛ</span><i style="width:${fs * .9}px;height:${Math.max(2, fs * .07)}px"></i></div>
+    <div class="line"></div><canvas width="${W}" height="${H}"></canvas>`;
+  const c = s.querySelector('canvas').getContext('2d'), img = c.createImageData(W, H), d = img.data;
+  for (let i = 0; i < d.length; i += 4) { const n = 128 + (Math.random() - .5) * 70; d[i] = d[i + 1] = d[i + 2] = n; d[i + 3] = 255; }
+  c.putImageData(img, 0, 0);
+</script>

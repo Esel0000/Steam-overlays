@@ -1,0 +1,58 @@
+<!doctype html>
+<!-- Sub-Badges (72px) und Emotes (112px) für Esel_99. Motiv: Sturmhaube mit Augenschlitz.
+     Zeile 1: Emotes nebeneinander à 112px, Zeile 2 (y=112): Badges à 72px. Wird per Chrome headless abfotografiert und zerschnitten. -->
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=block">
+<style>
+  html, body { margin: 0; background: transparent; }
+  .row { display: flex; }
+  .e { width: 112px; height: 112px; } .b { width: 72px; height: 72px; }
+  svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  text { font-family: Anton, Impact, sans-serif; }
+</style>
+<div class="row" id="emotes"></div>
+<div class="row" id="badges"></div>
+<script>
+  const CREAM = '#f2efe8', RED = '#c42a31', DEEP = '#2a0709', INK = '#0b0405';
+
+  // Kopf mit Sturmhaube; eyes = Augen im Schlitz, extra = Zusatz (Brauen, Träne, …)
+  function mask({ fill = DEEP, rim = CREAM, slit = RED, eyes = 'normal', extra = '' } = {}) {
+    const eye = {
+      normal: `<circle cx="40" cy="49" r="5" fill="${INK}"/><circle cx="60" cy="49" r="5" fill="${INK}"/>`,
+      side: `<circle cx="46" cy="49" r="5" fill="${INK}"/><circle cx="66" cy="49" r="5" fill="${INK}"/>`,
+      angry: `<circle cx="40" cy="51" r="4.5" fill="${INK}"/><circle cx="60" cy="51" r="4.5" fill="${INK}"/>`,
+      heart: `<path d="M40 54l-6-6a3.6 3.6 0 0 1 6-4 3.6 3.6 0 0 1 6 4z" fill="${INK}"/><path d="M60 54l-6-6a3.6 3.6 0 0 1 6-4 3.6 3.6 0 0 1 6 4z" fill="${INK}"/>`,
+      closed: `<path d="M34 50q6 5 12 0M54 50q6 5 12 0" stroke="${INK}" stroke-width="4" fill="none" stroke-linecap="round"/>`,
+    }[eyes];
+    return `<path d="M18 94V50C18 22 33 7 50 7s32 15 32 43v44z" fill="${fill}" stroke="${rim}" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M30 70q20 8 40 0M28 82q22 9 44 0" stroke="${rim}" stroke-opacity=".18" stroke-width="3" fill="none"/>
+      <rect x="25" y="39" width="50" height="21" rx="10.5" fill="${slit}"/>${eye}${extra}`;
+  }
+  const word = (t, size, color = CREAM) =>
+    `<text x="50" y="${50 + size * .36}" text-anchor="middle" font-size="${size}" fill="${color}" stroke="${INK}" stroke-width="7" paint-order="stroke" stroke-linejoin="round">${t}</text>`;
+
+  const EMOTES = [
+    ['Mask', mask()],
+    ['Sus', mask({ eyes: 'side' })],
+    ['Angry', mask({ eyes: 'angry', extra: `<path d="M27 36l17 6M73 36l-17 6" stroke="${CREAM}" stroke-width="5" stroke-linecap="round"/>` })],
+    ['Love', mask({ eyes: 'heart', slit: '#f08a90' })],
+    ['Cry', mask({ eyes: 'closed', extra: `<path d="M38 60c0 6-4 10-4 14a4 4 0 0 0 8 0c0-4-4-8-4-14z" fill="#8fd0ff" stroke="${INK}" stroke-width="2"/>` })],
+    ['GG', word('GG', 62)],
+    ['W', word('W', 78, RED)],
+    ['L', word('L', 78, '#9a8f8c')],
+  ];
+  // Badges nach Abo-Dauer: Farbe/Rand werden mit der Zeit edler
+  const BADGES = [
+    ['1', '#3d0a0d', 'none', DEEP, RED],
+    ['3', '#6b1216', 'none', DEEP, RED],
+    ['6', RED, CREAM, INK, CREAM],
+    ['9', INK, RED, DEEP, CREAM],
+    ['12', 'url(#gold)', 'none', INK, RED],
+    ['24', INK, 'url(#gold)', INK, '#e8b84a'],
+  ];
+  const defs = `<defs><linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3d27a"/><stop offset=".55" stop-color="#c8902c"/><stop offset="1" stop-color="#8a5a12"/></linearGradient></defs>`;
+  document.getElementById('emotes').innerHTML = EMOTES.map(([n, s]) => `<div class="e" data-name="${n}"><svg viewBox="0 0 100 100">${s}</svg></div>`).join('');
+  document.getElementById('badges').innerHTML = BADGES.map(([n, bg, ring, fill, slit]) =>
+    `<div class="b" data-name="${n}"><svg viewBox="0 0 100 100">${defs}<rect x="5" y="5" width="90" height="90" rx="24" fill="${bg}" ${ring !== 'none' ? `stroke="${ring}" stroke-width="8"` : ''}/>
+      <g transform="translate(15 13) scale(.7)">${mask({ fill, rim: fill === INK ? '#3a1518' : '#1a0507', slit, eyes: 'normal' })}</g></svg></div>`).join('');
+</script>

@@ -1,0 +1,54 @@
+<!doctype html>
+<!-- Bits-Badges und Bits-Stufen-Emotes für Esel_99: Casino-Chips 1K (grau), 5K (UMBRA-Rot), 10K (schwarz-gold).
+     ?i=1..3&t=badge|emote rendert genau eins, ohne Parameter alle nebeneinander. -->
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Semi+Condensed:wght@700&display=block">
+<style>
+  html, body { margin: 0; background: transparent; }
+  .row { display: flex; gap: 40px; padding: 30px; background: #1a1416; color: #f2efe8; font: 700 20px/1 "Barlow Semi Condensed", sans-serif; letter-spacing: .1em; }
+  .cell { display: grid; justify-items: center; gap: 10px; }
+  svg { display: block; }
+</style>
+<div id="root"></div>
+<script>
+  // [Text, Chipfarbe, Streifen/Schrift, Mitte]
+  const CHIPS = [
+    ['1K', '#4a4a4f', '#e9e6e1', '#2a2a2e'],
+    ['5K', '#c42a31', '#f2efe8', '#7a1419'],
+    ['10K', '#141214', '#d4a24a', '#0a090a'],
+  ];
+  const INK = '#050304';
+
+  // Ein Chip, zentriert bei (cx, cy) mit Radius r
+  function chip(i, cx, cy, r, withText) {
+    const [txt, base, stripe, mid] = CHIPS[i - 1];
+    let stripes = '';
+    for (let k = 0; k < 8; k++) {
+      stripes += `<rect x="${cx - r * .11}" y="${cy - r * .98}" width="${r * .22}" height="${r * .27}" fill="${stripe}" transform="rotate(${k * 45} ${cx} ${cy})"/>`;
+    }
+    const fs = txt.length > 2 ? r * .62 : r * .78;
+    return `
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="${base}" stroke="${INK}" stroke-width="${r * .07}"/>
+      ${stripes}
+      <circle cx="${cx}" cy="${cy}" r="${r * .66}" fill="${mid}" stroke="${stripe}" stroke-width="${r * .05}" stroke-dasharray="${r * .12} ${r * .08}"/>
+      ${withText ? `<text x="${cx}" y="${cy + fs * .36}" text-anchor="middle" fill="${stripe}" font-family="Anton, Impact, sans-serif" font-size="${fs}">${txt}</text>` : ''}`;
+  }
+
+  function svg(i, type, size) {
+    const gold = i === 3;
+    const glow = gold ? `<circle cx="50" cy="50" r="47" fill="url(#g)"/>` : '';
+    const defs = `<defs><radialGradient id="g"><stop offset=".55" stop-color="#d4a24a" stop-opacity=".55"/><stop offset="1" stop-color="#d4a24a" stop-opacity="0"/></radialGradient></defs>`;
+    const body = type === 'emote'
+      // Emote: zwei Chips dahinter, vorne der große Chip mit Zahl, dazu Funkeln
+      ? `${glow}${chip(i, 30, 34, 22, false)}${chip(i, 72, 30, 20, false)}${chip(i, 50, 56, 40, true)}
+         <path d="M80 72 l3 -9 l3 9 l9 3 l-9 3 l-3 9 l-3 -9 l-9 -3z" fill="${gold ? '#ffd88a' : '#f2efe8'}" stroke="${INK}" stroke-width="1.5"/>`
+      : `${glow}${chip(i, 50, 50, 44, true)}`;
+    return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">${defs}${body}</svg>`;
+  }
+
+  const q = new URLSearchParams(location.search), one = Number(q.get('i')), type = q.get('t') || 'badge', size = Number(q.get('s')) || 288;
+  document.getElementById('root').innerHTML = one
+    ? svg(one, type, size)
+    : `<div class="row">${[1, 2, 3].map(i => `<div class="cell">${svg(i, 'badge', 120)}<span>BADGE ${CHIPS[i - 1][0]}</span></div>`).join('')}
+       ${[1, 2, 3].map(i => `<div class="cell">${svg(i, 'emote', 120)}<span>EMOTE ${CHIPS[i - 1][0]}</span></div>`).join('')}</div>`;
+</script>

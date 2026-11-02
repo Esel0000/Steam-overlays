@@ -1,0 +1,46 @@
+<!doctype html>
+<!-- Foto-Wallpaper für Esel_99: ?v=desk&b=maske|tuch|auto&side=left|center|right (1920x1080, Faktor 2)
+     oder ?v=phone&b=… (iPhone 16: 393x852 CSS-Pixel, Faktor 3 = 1179x2556) -->
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@700&display=block">
+<style>
+  html, body { margin: 0; overflow: hidden; background: #060304; }
+  .stage { position: relative; overflow: hidden; background: #060304; }
+  .glow { position: absolute; inset: 0; }
+  .photo { position: absolute; background-repeat: no-repeat; filter: brightness(.78) contrast(1.05); }
+  .sig { position: absolute; display: grid; gap: 8px; }
+  .sig i { display: block; width: 44px; height: 3px; background: #c42a31; }
+  .sig span { font: 700 16px/1 "Barlow Semi Condensed", sans-serif; letter-spacing: .45em; color: rgba(242,239,232,.4); }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: overlay; opacity: .32; }
+</style>
+<div class="stage" id="s"></div>
+<script>
+  const q = new URLSearchParams(location.search), v = q.get('v') || 'desk', b = q.get('b') || 'maske', side = q.get('side') || 'right';
+  const W = v === 'phone' ? 393 : 1920, H = v === 'phone' ? 852 : 1080;
+  // Bildmitte (x in %) je Foto, damit Gesicht/Motiv im Ausschnitt bleibt
+  const FOCUS = { maske: 45, tuch: 52, auto: 50 };
+  const s = document.getElementById('s');
+  s.style.cssText = `width:${W}px;height:${H}px`;
+  let photo, glow, sig;
+  if (v === 'desk') {
+    // Hochkant-Foto als Streifen an einer Seite (oder mittig), weich ins Dunkle auslaufend
+    const w = 1150, left = side === 'left' ? 0 : side === 'center' ? (W - w) / 2 : W - w;
+    const fade = side === 'left' ? 'linear-gradient(90deg,#000 55%,transparent)' : side === 'center' ? 'linear-gradient(90deg,transparent,#000 28%,#000 72%,transparent)' : 'linear-gradient(90deg,transparent,#000 45%)';
+    photo = `left:${left}px;top:0;width:${w}px;height:${H}px;background-size:cover;background-position:${FOCUS[b]}% 30%;-webkit-mask-image:${fade};mask-image:${fade}`;
+    const gx = side === 'left' ? 20 : side === 'center' ? 50 : 80;
+    glow = `background:radial-gradient(50% 80% at ${gx}% 60%, rgba(110,22,27,.45), rgba(6,3,4,0) 70%)`;
+    sig = side === 'left' ? 'right:72px;bottom:64px;justify-items:end' : 'left:72px;bottom:64px';
+  } else {
+    // iPhone: Foto unten zwei Drittel, oben dunkel für Uhrzeit und Datum
+    photo = `left:0;top:${H * .14}px;width:${W}px;height:${H * .86}px;background-size:cover;background-position:${FOCUS[b]}% 35%;-webkit-mask-image:linear-gradient(180deg,transparent,rgba(0,0,0,.35) 18%,#000 40%);mask-image:linear-gradient(180deg,transparent,rgba(0,0,0,.35) 18%,#000 40%)`;
+    glow = 'background:radial-gradient(90% 40% at 50% 100%, rgba(110,22,27,.5), rgba(6,3,4,0) 70%)';
+    sig = 'left:0;right:0;bottom:60px;justify-items:center';
+  }
+  s.innerHTML = `<div class="glow" style="${glow}"></div><div class="photo" style="${photo};background-image:url(../bilder/voll-${b}.png)"></div>
+    <div class="sig" style="${sig}"><i></i><span>ESEL_99</span></div><canvas></canvas>`;
+  const cv = s.querySelector('canvas'), k = v === 'phone' ? 3 : 2;
+  cv.width = W * k; cv.height = H * k;
+  const c = cv.getContext('2d'), img = c.createImageData(cv.width, cv.height), d = img.data;
+  for (let i = 0; i < d.length; i += 4) { const n = 128 + (Math.random() - .5) * 60; d[i] = d[i + 1] = d[i + 2] = n; d[i + 3] = 255; }
+  c.putImageData(img, 0, 0);
+</script>

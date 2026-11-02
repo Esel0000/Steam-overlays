@@ -1,0 +1,24 @@
+<!doctype html>
+<!-- Desktop-Wallpaper für Esel_99 (1920x1080, mit Faktor 2 gerendert = 3840x2160): ?v=a (ruhig) | b (Foto rechts) -->
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@700&display=swap">
+<style>
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #060304; }
+  .glow { position: absolute; inset: 0; background: radial-gradient(55% 75% at 82% 88%, rgba(110,22,27,.55), rgba(40,8,10,.25) 45%, rgba(6,3,4,0) 75%), radial-gradient(40% 50% at 10% 0%, rgba(60,12,15,.25), rgba(6,3,4,0) 70%); }
+  .photo { position: absolute; right: 0; top: 0; bottom: 0; width: 760px; background: url(../bilder/strip1.png) center/cover; filter: brightness(.55) contrast(1.1);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 55%); mask-image: linear-gradient(90deg, transparent, #000 55%); }
+  .sig { position: absolute; left: 72px; bottom: 64px; display: grid; gap: 10px; }
+  .sig i { width: 48px; height: 3px; background: #c42a31; }
+  .sig span { font: 700 18px/1 "Barlow Semi Condensed", sans-serif; letter-spacing: .45em; color: rgba(242,239,232,.38); }
+  canvas { position: absolute; inset: 0; width: 1920px; height: 1080px; mix-blend-mode: overlay; opacity: .3; }
+</style>
+<div class="glow"></div>
+<div id="extra"></div>
+<div class="sig"><i></i><span>ESEL_99</span></div>
+<canvas width="3840" height="2160"></canvas>
+<script>
+  if (new URLSearchParams(location.search).get('v') === 'b') document.getElementById('extra').innerHTML = '<div class="photo"></div>';
+  const c = document.querySelector('canvas').getContext('2d'), img = c.createImageData(3840, 2160), d = img.data;
+  for (let i = 0; i < d.length; i += 4) { const n = 128 + (Math.random() - .5) * 60; d[i] = d[i + 1] = d[i + 2] = n; d[i + 3] = 255; }
+  c.putImageData(img, 0, 0);
+</script>

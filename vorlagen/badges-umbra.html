@@ -1,0 +1,40 @@
+<!doctype html>
+<!-- Abo-Badges für Esel_99 im UMBRA-Stil: Schriftzug UMBRΛ mit rotem Strich im Kreis wie mark.png. Stufe 1 ohne Farbe, bis 12 Monate füllt sich der Ring rot.
+     ?i=1..6 rendert genau ein Badge, ohne Parameter alle nebeneinander mit Monatsangabe. -->
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;700&family=Jost:wght@400;500&display=block">
+<style>
+  html, body { margin: 0; background: transparent; }
+  .row { display: flex; gap: 40px; padding: 30px; background: #1a1416; }
+  .cell { display: grid; justify-items: center; gap: 10px; color: #f2efe8; font: 700 20px/1 "Barlow Semi Condensed", sans-serif; letter-spacing: .1em; }
+  svg { display: block; }
+</style>
+<div id="root"></div>
+<script>
+  const TIERS = [[1, '1 MONAT'], [2, '2 MONATE'], [3, '3 MONATE'], [4, '6 MONATE'], [5, '9 MONATE'], [6, '12 MONATE']];
+  const mix = (a, b, t) => '#' + [0, 2, 4].map(i => Math.round(parseInt(a.substr(i + 1, 2), 16) * (1 - t) + parseInt(b.substr(i + 1, 2), 16) * t).toString(16).padStart(2, '0')).join('');
+
+  function badge(n, size) {
+    const t = (n - 1) / 5;                         // 0 = ohne Farbe, 1 = voll rot
+    const bg = mix('#141414', '#4a0c10', t), C = 2 * Math.PI * 41;
+    const red = n === 1 ? '#8a8582' : '#c42a31';
+    return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="bg${n}" cx="50%" cy="40%"><stop offset="0" stop-color="${mix(bg, '#ffffff', .06)}"/><stop offset="1" stop-color="${mix(bg, '#000000', .45)}"/></radialGradient>
+        <filter id="gl${n}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3"/></filter>
+      </defs>
+      ${n === 6 ? `<circle cx="50" cy="50" r="44" fill="none" stroke="#c42a31" stroke-width="8" opacity=".55" filter="url(#gl${n})"/>` : ''}
+      <circle cx="50" cy="50" r="46" fill="url(#bg${n})" stroke="#050304" stroke-width="3"/>
+      <circle cx="50" cy="50" r="41" fill="none" stroke="#4d4846" stroke-width="5"/>
+      ${t > 0 ? `<circle cx="50" cy="50" r="41" fill="none" stroke="#c42a31" stroke-width="5" stroke-linecap="${t < 1 ? 'round' : 'butt'}"
+          stroke-dasharray="${(C * t).toFixed(2)} ${C.toFixed(2)}" transform="rotate(-90 50 50)"/>` : ''}
+      <text x="51" y="55" text-anchor="middle" fill="#f2efe8" font-family="Jost, sans-serif" font-weight="500" font-size="14.5" letter-spacing="2.4">UMBRΛ</text>
+      <rect x="44" y="61.5" width="12" height="3.2" fill="${red}"/>
+    </svg>`;
+  }
+
+  const q = new URLSearchParams(location.search), one = Number(q.get('i')), size = Number(q.get('s')) || 288;
+  document.getElementById('root').innerHTML = one
+    ? badge(one, size)
+    : `<div class="row">${TIERS.map(([n, m]) => `<div class="cell">${badge(n, 150)}<span>${m}</span></div>`).join('')}</div>`;
+</script>

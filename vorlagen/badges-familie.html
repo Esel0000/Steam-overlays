@@ -1,0 +1,67 @@
+<!doctype html>
+<!-- Abo-Badges für Esel_99: verhüllte Comic-Figur (Tuch wie im Profilbild), die mit dem Rang wächst.
+     ?i=1..6 rendert genau ein Badge (Rang), ohne Parameter alle nebeneinander mit Namen. -->
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Semi+Condensed:wght@500;700&display=block">
+<style>
+  html, body { margin: 0; background: transparent; }
+  .row { display: flex; gap: 40px; padding: 30px; background: #1a1416; }
+  .cell { display: grid; justify-items: center; gap: 10px; color: #f2efe8; font: 700 22px/1 "Barlow Semi Condensed", sans-serif; letter-spacing: .12em; }
+  .cell small { font-weight: 500; font-size: 16px; color: #a89a96; letter-spacing: .05em; }
+  svg { display: block; }
+</style>
+<div id="root"></div>
+<script>
+  const RANKS = [
+    [1, 'SOLDAT', '1 Monat'], [2, 'CAPO', '3 Monate'], [3, 'CONSIGLIERE', '6 Monate'],
+    [4, 'UNTERBOSS', '9 Monate'], [5, 'DON', '12 Monate'], [6, 'PATE', '24 Monate'],
+  ];
+  const INK = '#0b0506', S = 'stroke="' + INK + '" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"';
+
+  function badge(r, size) {
+    const angry = r >= 4, gold = r >= 6;
+    const eyeFill = gold ? '#ff4a50' : '#f7f3ee';
+    const eyes = angry
+      ? `<path d="M35.5 47.5 L46.5 51 Q45 54.5 40.5 54 Q36 53.4 35.5 47.5Z" fill="${eyeFill}"/>
+         <path d="M64.5 47.5 L53.5 51 Q55 54.5 59.5 54 Q64 53.4 64.5 47.5Z" fill="${eyeFill}"/>`
+      : `<ellipse cx="41" cy="51" rx="4.6" ry="2.8" fill="${eyeFill}"/><ellipse cx="59" cy="51" rx="4.6" ry="2.8" fill="${eyeFill}"/>`;
+    return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="net${r}" width="5.5" height="5.5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <rect width="5.5" height="5.5" fill="#ece3df"/>
+          <path d="M0 0H5.5M0 0V5.5" stroke="#1b1012" stroke-width="1.3"/>
+          <rect x="1.9" y="1.9" width="1.7" height="1.7" fill="#1b1012"/>
+        </pattern>
+        <radialGradient id="glow${r}"><stop offset="0" stop-color="#c42a31" stop-opacity=".9"/><stop offset=".7" stop-color="#c42a31" stop-opacity=".35"/><stop offset="1" stop-color="#c42a31" stop-opacity="0"/></radialGradient>
+        <filter id="eg${r}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      ${gold ? `<circle cx="50" cy="52" r="49" fill="url(#glow${r})"/><circle cx="50" cy="52" r="45" fill="none" stroke="#d4a24a" stroke-width="2.5"/>` : ''}
+      ${r >= 3 ? `
+        <path d="M13 100 C15 83 30 76 50 76 C70 76 85 83 87 100Z" fill="#17121a" ${S}/>
+        <path d="M41 76 L50 93 L59 76Z" fill="#f2efe8" ${S}/>
+        <path d="M46.5 80 H53.5 L55 89 L50 97 L45 89Z" fill="#c42a31" ${S}/>
+        <path d="M37 78 L46 95 M63 78 L54 95" fill="none" ${S}/>` : ''}
+      <path d="M27 66 C30 78 70 78 73 66 C70 72 30 72 27 66Z" fill="url(#net${r})" ${S}/>
+      <path d="M24 50 C24 30 36 22 50 22 C64 22 76 30 76 50 C76 64 66 74 50 74 C34 74 24 64 24 50Z" fill="url(#net${r})" ${S}/>
+      <path d="M30 36 C40 31 60 31 70 36 M28 61 C40 67 60 67 72 61" fill="none" stroke="${INK}" stroke-width="1.8" stroke-linecap="round" opacity=".55"/>
+      <path d="M26 47 Q50 40 74 47 Q74 57 50 57 Q26 57 26 47Z" fill="#160b0d" ${S}/>
+      <g ${gold ? `filter="url(#eg${r})"` : ''}>${eyes}</g>
+      ${r >= 2 ? `
+        <ellipse cx="50" cy="31" rx="38" ry="7.5" fill="#1d1a20" ${S}/>
+        <path d="M29 31 C28 17 35 9 50 11 C65 9 72 17 71 31Z" fill="#26222a" ${S}/>
+        <path d="M30.2 24 H69.8 L70.6 30 H29.4Z" fill="${gold ? '#d4a24a' : '#c42a31'}"/>
+        <path d="M29 31 C28 17 35 9 50 11 C65 9 72 17 71 31" fill="none" ${S}/>
+        <path d="M41 14 Q50 19 59 14" fill="none" stroke="${INK}" stroke-width="2.2" stroke-linecap="round"/>` : ''}
+      ${r >= 5 ? `
+        <path d="M60 64 L82 59 L83.5 64 L61.5 69Z" fill="#7a4524" ${S}/>
+        <path d="M81 59.5 L83.5 64" stroke="#ff7a2e" stroke-width="3.2" stroke-linecap="round"/>
+        <path d="M85 56 C80 50 89 46 84 39 C80 33 88 29 85 22" fill="none" stroke="#f2efe8" stroke-width="2.4" stroke-linecap="round" opacity=".75"/>` : ''}
+    </svg>`;
+  }
+
+  const q = new URLSearchParams(location.search), one = Number(q.get('i')), size = Number(q.get('s')) || 288;
+  const root = document.getElementById('root');
+  root.innerHTML = one
+    ? badge(one, size)
+    : `<div class="row">${RANKS.map(([r, n, m]) => `<div class="cell">${badge(r, 160)}<span>${n}</span><small>${m}</small></div>`).join('')}</div>`;
+</script>

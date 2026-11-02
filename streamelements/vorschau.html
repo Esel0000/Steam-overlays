@@ -1,0 +1,27 @@
+<!doctype html>
+<!-- Lokale Vorschau des StreamElements-Widgets: ?e=follow|sub|resub|gift|bulk|raid|cheer simuliert ein Ereignis -->
+<meta charset="utf-8">
+<link rel="stylesheet" href="widget.css">
+<style>html, body { width: 1920px; height: 400px; background: #2b2b30; }</style>
+<div id="mount"></div>
+<script>
+  fetch('widget.html').catch(() => null);
+</script>
+<script>
+  document.getElementById('mount').outerHTML = `<div id="stage"><div class="alert" id="alert"><div class="bar"></div><div class="body"><div class="kicker" id="kicker"></div><div class="name" id="name"></div><div class="line" id="line"></div></div><canvas class="grain" id="grain" width="460" height="130"></canvas></div></div><audio id="sound"></audio>`;
+</script>
+<script src="widget.js"></script>
+<script>
+  const EVENTS = {
+    follow: ['follower-latest', { name: 'NachtFalke' }],
+    sub: ['subscriber-latest', { name: 'Kasab', amount: 1 }],
+    resub: ['subscriber-latest', { name: 'Kasab', amount: 14 }],
+    gift: ['subscriber-latest', { name: 'NachtFalke', sender: 'Kasab', gifted: true, amount: 1 }],
+    bulk: ['subscriber-latest', { name: 'Kasab', sender: 'Kasab', bulkGifted: true, amount: 5 }],
+    raid: ['raid-latest', { name: 'Kasab', amount: 37 }],
+    cheer: ['cheer-latest', { name: 'NachtFalke', amount: 500 }],
+  };
+  const e = new URLSearchParams(location.search).get('e') || 'follow';
+  window.dispatchEvent(new CustomEvent('onWidgetLoad', { detail: { fieldData: { duration: 30 } } }));
+  window.dispatchEvent(new CustomEvent('onEventReceived', { detail: { listener: EVENTS[e][0], event: EVENTS[e][1] } }));
+</script>

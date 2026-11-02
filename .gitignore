@@ -1,0 +1,5 @@
+# Lokale Dateien, nie ins Repo
+.env
+*.log
+Thumbs.db
+desktop.ini

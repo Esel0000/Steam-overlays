@@ -1,0 +1,19 @@
+<!doctype html>
+<!-- OBS-Kamerarahmen für Esel_99: transparenter Hintergrund, Größe der Browser-Quelle = Größe der Kamera (z. B. 640x360).
+     Kamera in OBS genau darunter legen. -->
+<meta charset="utf-8">
+<title>Esel_99 · Kamerarahmen</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@700&display=swap">
+<style>
+  :root { --hot: #c42a31; --text: #f2efe8; }
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+  .frame { position: absolute; inset: 0; border: 3px solid rgba(242,239,232,.85); box-shadow: inset 0 0 40px rgba(0,0,0,.45); }
+  .corner { position: absolute; width: 34px; height: 34px; border-color: var(--hot); border-style: solid; }
+  .tl { left: -3px; top: -3px; border-width: 6px 0 0 6px; } .br { right: -3px; bottom: -3px; border-width: 0 6px 6px 0; }
+  .tag { position: absolute; left: 18px; bottom: 16px; display: flex; align-items: center; gap: 10px; padding: 8px 14px 7px; background: rgba(7,3,4,.82);
+    font: 700 22px/1 "Barlow Semi Condensed", sans-serif; letter-spacing: .22em; color: var(--text); }
+  .tag i { width: 9px; height: 9px; border-radius: 50%; background: var(--hot); box-shadow: 0 0 10px var(--hot); animation: blink 1.6s ease-in-out infinite; }
+  @keyframes blink { 50% { opacity: .3; } }
+</style>
+<div class="frame"><span class="corner tl"></span><span class="corner br"></span></div>
+<div class="tag"><i></i>ESEL_99</div>

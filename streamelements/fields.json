@@ -1,0 +1,14 @@
+{
+  "duration": { "type": "number", "label": "Anzeigedauer (Sekunden)", "value": 7, "min": 3, "max": 20 },
+  "minRaid": { "type": "number", "label": "Raid ab Zuschauern", "value": 2, "min": 1 },
+  "minBits": { "type": "number", "label": "Bits ab", "value": 1, "min": 1 },
+  "minTip": { "type": "number", "label": "Spenden ab (€)", "value": 1, "min": 1 },
+  "sound_follow": { "type": "sound-input", "label": "Sound Follow (follow-feuerzeug.mp3)", "value": "" },
+  "sound_sub": { "type": "sound-input", "label": "Sound Sub (sub-anstossen.mp3)", "value": "" },
+  "sound_gift": { "type": "sound-input", "label": "Sound Geschenk (geschenk-umschlag.mp3)", "value": "" },
+  "sound_bits": { "type": "sound-input", "label": "Sound Bits (bits-muenzen.mp3)", "value": "" },
+  "sound_tip": { "type": "sound-input", "label": "Sound Spende (spende-kasse.mp3)", "value": "" },
+  "sound_raid": { "type": "sound-input", "label": "Sound Raid (raid-klopfen.mp3)", "value": "" },
+  "soundBig": { "type": "sound-input", "label": "Sound großer Moment (gross-boom.mp3)", "value": "" },
+  "volume": { "type": "slider", "label": "Lautstärke", "value": 50, "min": 0, "max": 100, "step": 1 }
+}

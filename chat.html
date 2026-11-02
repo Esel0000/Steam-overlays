@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>Chat</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Semi+Condensed:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* ===== Einstellungen ===== */
+:root{--ice:#f2efe8;--steel:#a89a96;--hot:#c42a31}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:transparent;font-family:'Barlow Semi Condensed',Segoe UI,sans-serif}
+#chat{position:absolute;left:70px;bottom:110px;width:470px;display:flex;flex-direction:column;justify-content:flex-end;gap:16px}
+.m{padding:14px 20px 14px 22px;background:linear-gradient(90deg,rgba(10,4,5,.84),rgba(24,7,9,.35));border-left:3px solid var(--hot);
+   opacity:0;filter:blur(6px);transform:translateY(10px);transition:opacity 1.2s ease,filter 1.2s ease,transform 1.2s ease}
+.m.on{opacity:1;filter:blur(0);transform:none}
+.m.off{opacity:0;filter:blur(8px);transition-duration:2.5s}
+.n{font-weight:700;font-size:20px;letter-spacing:.14em;text-transform:uppercase;color:var(--hot);margin-bottom:4px}
+.t{font-weight:500;font-size:22px;line-height:1.35;color:#f2efe8;word-wrap:break-word}
+.t img{height:26px;vertical-align:middle}
+</style></head><body><div id="chat"></div>
+<script>
+const KANAL='esel_99';          // Twitch-Kanal
+const SEKUNDEN_SICHTBAR=30;    // danach blendet die Nachricht aus
+const MAX_NACHRICHTEN=6;
+const DEMO=false;              // true = Testnachrichten anzeigen
+
+const box=document.getElementById('chat');
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function emotes(text,tag){
+  if(!tag) return esc(text);
+  const parts=[];tag.split('/').forEach(e=>{const [id,pos]=e.split(':');pos.split(',').forEach(p=>{const [a,b]=p.split('-').map(Number);parts.push({a,b,id})})});
+  parts.sort((x,y)=>x.a-y.a);const ch=[...text];let out='',i=0;
+  for(const p of parts){out+=esc(ch.slice(i,p.a).join(''))+`<img src="https://static-cdn.jtvnw.net/emoticons/v2/${p.id}/default/dark/1.0">`;i=p.b+1}
+  return out+esc(ch.slice(i).join(''));
+}
+function add(name,html){
+  const d=document.createElement('div');d.className='m';d.innerHTML=`<div class="n">${esc(name)}</div><div class="t">${html}</div>`;
+  box.appendChild(d);requestAnimationFrame(()=>requestAnimationFrame(()=>d.classList.add('on')));
+  while(box.children.length>MAX_NACHRICHTEN) box.firstChild.remove();
+  setTimeout(()=>{d.classList.add('off');setTimeout(()=>d.remove(),2600)},SEKUNDEN_SICHTBAR*1000);
+}
+function connect(){
+  const ws=new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+  ws.onopen=()=>{ws.send('CAP REQ :twitch.tv/tags');ws.send('PASS SCHMOOPIIE');ws.send('NICK justinfan'+Math.floor(Math.random()*80000+1000));ws.send('JOIN #'+KANAL.toLowerCase())};
+  ws.onmessage=e=>e.data.split('\r\n').forEach(l=>{
+    if(l.startsWith('PING')){ws.send('PONG :tmi.twitch.tv');return}
+    const m=l.match(/^@(\S+) :(\w+)!\S+ PRIVMSG #\S+ :(.*)$/);if(!m)return;
+    const tags=Object.fromEntries(m[1].split(';').map(t=>t.split('=')));
+    if(m[3].startsWith('!'))return;   // Befehle nicht anzeigen
+    add(tags['display-name']||m[2],emotes(m[3],tags.emotes));
+  });
+  ws.onclose=()=>setTimeout(connect,5000);
+}
+if(DEMO){[['nachtfalke','na wann gehts los'],['nachteule_','die stimmung heute, gefällt mir'],['Gast_47','guten abend familie']].forEach((x,i)=>setTimeout(()=>add(...x),i*700))}
+else connect();
+</script></body></html>
