@@ -1,0 +1,90 @@
+<!doctype html>
+<!-- UMBRA-Desktop-Hintergrund: Höhenlinien in Dunkelrot, Glühen, Wortmarke aus UMBRA/bot/assets/mark.png.
+     ?w=1920&h=1080 · &gw=5760&ox=1920 Ausschnitt aus einem Panorama (Gesamtbreite, Versatz) · &logo=0 ohne Logo · &cx=0.5 Mitte der Linien (Anteil der Breite) · &seed=7
+     Rendern: Chrome headless --window-size=W,H --force-device-scale-factor=2 --screenshot -->
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; overflow: hidden; background: #070505; }
+  canvas, img { position: absolute; }
+</style>
+<canvas id="c"></canvas>
+<img id="mark" alt="" src="../../UMBRA/bot/assets/mark.png">
+<script>
+  const q = new URLSearchParams(location.search);
+  const VW = Number(q.get("w")) || 1920, H = Number(q.get("h")) || 1080;
+  const W = Number(q.get("gw")) || VW, OX = Number(q.get("ox")) || 0;
+  const logo = q.get("logo") !== "0", cx = Number(q.get("cx") || 0.5);
+  let seed = Number(q.get("seed")) || 7;
+  const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  document.body.style.width = VW + "px"; document.body.style.height = H + "px";
+  const cv = document.getElementById("c");
+  const S = devicePixelRatio || 1;
+  cv.width = VW * S; cv.height = H * S; cv.style.width = VW + "px"; cv.style.height = H + "px";
+  const g = cv.getContext("2d");
+  g.scale(S, S);
+  g.translate(-OX, 0);
+
+  // Grund: fast Schwarz mit warmem Rot von oben rechts und unter dem Logo
+  g.fillStyle = "#070505"; g.fillRect(0, 0, W, H);
+  const glow = (x, y, r, a) => { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, `rgba(107,18,22,${a})`); gr.addColorStop(1, "rgba(107,18,22,0)"); g.fillStyle = gr; g.fillRect(0, 0, W, H); };
+  glow(W * cx, H * 0.5, H * 0.9, 0.32);
+  glow(W * Math.min(cx + 0.28, 0.95), H * 0.05, H * 0.8, 0.22);
+  glow(W * Math.max(cx - 0.3, 0.05), H * 1.05, H * 0.7, 0.18);
+
+  // Höhenfeld: ein großer Hügel um die Mitte, dazu weiche Nebenhügel und langwellige Wellen
+  const hills = [{ x: W * cx, y: H * 0.48, s: H * 0.55, a: 1.4 }];
+  for (let i = 0; i < 9; i++) hills.push({ x: rnd() * W, y: rnd() * H, s: H * (0.18 + rnd() * 0.35), a: (rnd() - 0.4) * 0.9 });
+  const waves = Array.from({ length: 4 }, () => ({ fx: (rnd() * 2 + 0.5) / W * Math.PI * 2, fy: (rnd() * 2 + 0.5) / H * Math.PI * 2, p: rnd() * 6.3, a: 0.06 + rnd() * 0.06 }));
+  const field = (x, y) => {
+    let v = 0;
+    for (const h of hills) { const dx = x - h.x, dy = y - h.y; v += h.a * Math.exp(-(dx * dx + dy * dy) / (2 * h.s * h.s)); }
+    for (const w of waves) v += w.a * Math.sin(x * w.fx + w.p) * Math.cos(y * w.fy - w.p);
+    return v;
+  };
+
+  // Höhenlinien per Marching Squares
+  const step = 4, nx = Math.ceil(W / step) + 1, ny = Math.ceil(H / step) + 1;
+  const F = new Float32Array(nx * ny);
+  let min = Infinity, max = -Infinity;
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) { const v = field(i * step, j * step); F[j * nx + i] = v; if (v < min) min = v; if (v > max) max = v; }
+  const levels = 34;
+  g.lineWidth = 1.1; g.lineCap = "round";
+  for (let l = 1; l < levels; l++) {
+    const t = min + (max - min) * (l / levels);
+    const strong = l % 5 === 0;
+    g.strokeStyle = strong ? "rgba(196,42,49,0.30)" : "rgba(160,32,38,0.16)";
+    g.lineWidth = strong ? 1.4 : 1;
+    g.beginPath();
+    for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) {
+      const a = F[j * nx + i], b = F[j * nx + i + 1], c = F[(j + 1) * nx + i + 1], d = F[(j + 1) * nx + i];
+      const k = (a > t) | ((b > t) << 1) | ((c > t) << 2) | ((d > t) << 3);
+      if (k === 0 || k === 15) continue;
+      const x = i * step, y = j * step;
+      const lerp = (p, q2) => (t - p) / (q2 - p);
+      const top = [x + step * lerp(a, b), y], right = [x + step, y + step * lerp(b, c)];
+      const bottom = [x + step * lerp(d, c), y + step], left = [x, y + step * lerp(a, d)];
+      const seg = { 1: [left, top], 2: [top, right], 3: [left, right], 4: [right, bottom], 5: [left, top, right, bottom], 6: [top, bottom], 7: [left, bottom],
+        8: [bottom, left], 9: [top, bottom], 10: [top, right, bottom, left], 11: [right, bottom], 12: [right, left], 13: [top, right], 14: [left, top] }[k];
+      for (let s = 0; s < seg.length; s += 2) { g.moveTo(seg[s][0], seg[s][1]); g.lineTo(seg[s + 1][0], seg[s + 1][1]); }
+    }
+    g.stroke();
+  }
+
+  // Rand leicht abdunkeln, damit Symbole und Taskleiste ruhig wirken
+  const vig = g.createRadialGradient(W * cx, H * 0.5, H * 0.3, W * cx, H * 0.5, Math.max(W, H) * 0.75);
+  vig.addColorStop(0, "rgba(0,0,0,0)"); vig.addColorStop(1, "rgba(0,0,0,0.55)");
+  g.fillStyle = vig; g.fillRect(0, 0, W, H);
+
+  // Wortmarke: Ausschnitt aus mark.png (Schrift + roter Strich), Schwarz verschwindet per „screen“
+  const mark = document.getElementById("mark");
+  if (logo) {
+    const crop = { x: 140, y: 445, w: 745, h: 160 };
+    const width = Math.min(W, H * 16 / 9) * 0.24, height = width * crop.h / crop.w;
+    const wrap = document.createElement("div");
+    Object.assign(wrap.style, { position: "absolute", left: (W * cx - width / 2 - OX) + "px", top: (H * 0.48 - height / 2) + "px", width: width + "px", height: height + "px", overflow: "hidden", mixBlendMode: "screen", opacity: "0.92" });
+    const scale = width / crop.w;
+    Object.assign(mark.style, { width: (1024 * scale) + "px", left: (-crop.x * scale) + "px", top: (-crop.y * scale) + "px", position: "absolute" });
+    wrap.appendChild(mark);
+    document.body.appendChild(wrap);
+  } else mark.remove();
+</script>
