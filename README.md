@@ -1,5 +1,14 @@
 # Stream-Overlays
 
+| **Steckbrief** | |
+|---|---|
+| Was | OBS-Szenen, Overlays, Stinger und Alerts für den Twitch-Kanal Esel_99 |
+| Läuft | lokal in OBS. Die Pfade sind in OBS fest eingetragen, deshalb Dateien nicht verschieben |
+| Starten | in OBS als Browserquelle |
+| Testen | Vorschau im Browser öffnen |
+| Deployen | kein Server. StreamElements- und Tipeee-Code wird dort von Hand eingefügt |
+| GitHub | Esel0000/stream-overlays |
+
 Grafiken und Overlays für den Twitch-Kanal Esel_99.
 
 | Ordner / Datei | Inhalt |
