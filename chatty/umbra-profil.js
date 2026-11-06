@@ -19,11 +19,11 @@ const F = {
 
 // ---------- Blacklist ----------
 // Beleidigungen und Hass: rot markiert + Hervorhebung, damit du oder die Mods sofort handeln können.
-const HASS = 'regwi:(hurensohn|huso|missgeburt|spast|spasti|behindert|mongo|schwuchtel|transe|fotze|kanake|zigeuner|n[i1!]gg(a|er|ah)|f[a@]gg?ot|retard|kys|kill yourself|bring dich um)'
+const HASS = 'regwi:(hurensohn|huso|missgeburt|spast|spasti|(du|bist du|seid ihr|ihr) behindert|mongo|schwuchtel|transe|fotze|kanake|zigeuner|n[i1!]gg(a|er|ah)|f[a@]gg?ot|retard|kys|kill yourself|bring dich um)'
 // Scam und Fremdwerbung: gelb markiert + Hervorhebung
-const SCAM = 'regi:((free|gratis|kostenlos|cheap|billig|buy|kauf).{0,25}(followers?|viewers?|zuschauer|primes?|nitro|subs?)|dogehype|streamboo|bigfollows|followkings|viewerboost|twitchboost|onlyfans|nudes|steamcommunity\\.(ru|cc)|discordnitro|nitro.{0,10}(free|gift))'
+const SCAM = 'regi:((free|gratis|kostenlos).{0,25}(followers?|viewers?|zuschauer|nitro)|(cheap|billig|buy|kauf).{0,25}(followers?|viewers?|zuschauer|primes?|subs?)|dogehype|streamboo|bigfollows|followkings|viewerboost|twitchboost|onlyfans|nudes|steamcommunity\.(ru|cc)|discordnitro|nitro.{0,10}(free|gift))'
 // Namen und Stichwörter, die immer auffallen sollen
-const NAME = 'regwi:@?(esel(_?99|_?8i)?|basler|pasa|pruda(_?031)?)'
+const NAME = 'regwi:@?(esel(_?99|_?8i)?|basler|pasa ?paco|pasa|pruda(_?031)?)'
 
 const HIGHLIGHT = [
   NAME,
@@ -67,7 +67,8 @@ const UMBRA = {
   banReasons: 'Spam\nScam-Link\nHass / Beleidigung\nBann umgehen\nFremdwerbung\nSpoiler / Backseat',
   // Kanal und Tabs
   // onStart 2: verbinden und den Kanälen aus "channel" beitreten (nicht den zuletzt offenen)
-  channel: 'esel_99', onStart: 2, tabsPlacement: 'top', roomFavorites: {}, channelHistory: {},
+  // Eigener Kanal plus die Kanäle, in denen du Mod bist (laut Chat-Logs bis 22.10.2026)
+  channel: 'esel_99, kasab329, 1jeffryy, descarlito, emiliaperry', onStart: 2, tabsPlacement: 'top', roomFavorites: {}, channelHistory: {},
   // Eigene Tabs (Chatty ab 0.26): Kopien wichtiger Nachrichten landen zusätzlich in "Wichtig" und "Blacklist"
   routing: [
     `to:Wichtig ${NAME}`,
@@ -80,14 +81,18 @@ const UMBRA = {
   routingMulti: true,
   // Beim Betreten die letzten Nachrichten (bis 24 h) nachladen, praktisch nach einem Neustart
   historyServiceEnabled: true,
+  // Schreibtricks wie hur3ns0hn oder h.u.r.e.n.s.o.h.n erkennen
+  matchingSubstitutesEnabled: true,
 }
 
 // Basis: das bestehende UMBRA-Profil (damit eigene Änderungen bleiben), beim ersten Mal das alte Chatty-Profil
 const UMBRA_DATEI = path.join(ZIEL, 'settings')
 const quelle = fs.existsSync(UMBRA_DATEI) ? UMBRA_DATEI : ALT
 const basis = fs.existsSync(quelle) ? JSON.parse(fs.readFileSync(quelle, 'utf8')) : {}
+// Bots lösen nie ein Highlight aus (bestehende Einträge bleiben)
+basis.noHighlightUsers = [...new Set([...(basis.noHighlightUsers ?? []), 'fossabot', 'streamelements', 'nightbot'])]
 // Fenster-Layout mit fremden Kanälen verwerfen, damit nur esel_99 (plus eigene Tabs) aufgeht
-if (quelle === ALT || /"#(?!esel_99")[^"]+"/.test(JSON.stringify(basis.layouts ?? {}))) basis.layouts = {}
+if (quelle === ALT || /"#(?!(esel_99|kasab329|1jeffryy|descarlito|emiliaperry)")[^"]+"/.test(JSON.stringify(basis.layouts ?? {}))) basis.layouts = {}
 for (const k of Object.keys(basis)) if (/token|login|pass|secret|oauth/i.test(k)) delete basis[k]
 const neu = { ...basis, ...UMBRA }
 
