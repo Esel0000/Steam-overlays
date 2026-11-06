@@ -20,4 +20,6 @@ Grafiken und Overlays für den Twitch-Kanal Esel_99.
 | `tipeee/` | Vorlagen für die Tipeee-Seite |
 | `vorlagen/` | Bearbeitbare Vorlagen für neue Grafiken |
 | `bilder/` | Ausgangsbilder |
+| `chatty/` | Chatty-Profil „UMBRA“: Farben, Highlights, Blacklist, Tabs „Wichtig“ und „Blacklist“. Chatty schließen, `node chatty/umbra-profil.js`, dann „Chatty UMBRA“ starten |
+| `wallpaper/wallpaper-engine/` | Animierte Desktop-Hintergründe für Wallpaper Engine (UMBRA Nacht, Zeit, System). Arbeitskopie liegt in `D:\SteamLibrary\steamapps\common\wallpaper_engine\projects\myprojects` |
 | `alt/` | Frühere Entwürfe, nur zum Nachschlagen |

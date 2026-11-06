@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>UMBRA · Zeit</title>
+<style>
+  @font-face { font-family: "Bodoni"; src: url("fonts/bodoni.woff2") format("woff2"); }
+  @font-face { font-family: "Martian"; src: url("fonts/martian-mono.woff2") format("woff2"); }
+  :root { --rot: #c42a31; --hell: #e0565c; --papier: #f2efe8; }
+  html, body { margin: 0; height: 100%; background: #070304; overflow: hidden; cursor: default; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  #hud { position: fixed; inset: 0; pointer-events: none; color: var(--papier); font-family: "Martian", Consolas, monospace; }
+  .marke { position: absolute; left: 4.2vw; bottom: 7.5vh; }
+  .marke h1 { margin: 0; font: 400 clamp(38px, 4.4vw, 92px)/1 "Bodoni", Georgia, serif; letter-spacing: .32em; color: var(--papier); text-shadow: 0 0 40px rgba(196, 42, 49, .35); }
+  .marke .linie { width: 3.2em; height: 1px; background: var(--rot); margin: 1.4em 0 1.1em; font-size: clamp(10px, .62vw, 13px); box-shadow: 0 0 12px var(--rot); }
+  .marke .zeile { font-size: clamp(10px, .62vw, 13px); letter-spacing: .28em; text-transform: uppercase; opacity: .62; }
+  .marke .status { margin-top: .9em; color: var(--hell); opacity: .9; transition: opacity 1.2s; }
+  .uhr { position: absolute; right: 4.2vw; bottom: 7.5vh; text-align: right; }
+  .uhr .zeit { font: 400 clamp(44px, 5vw, 104px)/1 "Bodoni", Georgia, serif; letter-spacing: .06em; font-variant-numeric: tabular-nums; }
+  .uhr .zeit .sek { color: var(--rot); font-size: .38em; margin-left: .25em; vertical-align: .9em; }
+  .uhr .datum { margin-top: 1em; font-size: clamp(10px, .62vw, 13px); letter-spacing: .28em; text-transform: uppercase; opacity: .62; }
+  .ecke { position: absolute; top: 6vh; font-size: clamp(9px, .55vw, 12px); letter-spacing: .3em; opacity: .38; text-transform: uppercase; }
+  .ecke.l { left: 4.2vw; } .ecke.r { right: 4.2vw; text-align: right; }
+  .aus { display: none; }
+
+  .seite { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; padding: 0 9vw; box-sizing: border-box; }
+  .links .seite { align-items: flex-end; text-align: right; }
+  .rechts .seite { align-items: flex-start; text-align: left; }
+  .klein { font-size: clamp(10px, .62vw, 13px); letter-spacing: .3em; text-transform: uppercase; opacity: .55; }
+  .rot { color: var(--rot); opacity: 1; }
+  .grossuhr { font: 400 clamp(90px, 10.5vw, 220px)/.9 "Bodoni", Georgia, serif; letter-spacing: .02em; font-variant-numeric: tabular-nums; margin: .25em 0 .1em; text-shadow: 0 0 60px rgba(196,42,49,.25); }
+  .grossuhr .sek { color: var(--rot); font-size: .3em; margin-left: .2em; vertical-align: 1.9em; }
+  .tag { font: italic 400 clamp(22px, 1.9vw, 40px)/1.2 "Bodoni", Georgia, serif; margin-bottom: 2.2em; }
+  .balken { width: min(26vw, 460px); height: 2px; background: rgba(242,239,232,.12); margin: 1em 0 .8em; position: relative; }
+  .links .balken { margin-left: auto; }
+  .balken i { position: absolute; top: 0; bottom: 0; right: 0; background: var(--rot); box-shadow: 0 0 14px var(--rot); }
+  .rechts .balken i { right: auto; left: 0; }
+  .titel { font: 400 clamp(30px, 2.6vw, 56px)/1 "Bodoni", Georgia, serif; letter-spacing: .3em; margin: .5em 0 1.1em; }
+  .kal { display: grid; grid-template-columns: repeat(7, 2.9em); gap: .55em 0; font-size: clamp(11px, .8vw, 16px); letter-spacing: .08em; }
+  .kal span { text-align: center; padding: .35em 0; opacity: .7; }
+  .kal .kopf { opacity: .35; font-size: .8em; letter-spacing: .25em; }
+  .kal .leer { opacity: 0; }
+  .kal .heute { color: #070304; background: var(--rot); opacity: 1; box-shadow: 0 0 18px rgba(196,42,49,.6); }
+  .kal .we { opacity: .4; }
+  .dienste { margin-top: 2.6em; min-width: min(26vw, 460px); }
+  .dienst { display: flex; align-items: center; gap: 1em; padding: .75em 0; border-top: 1px solid rgba(242,239,232,.08); font-size: clamp(11px, .75vw, 15px); letter-spacing: .2em; text-transform: uppercase; }
+  .dienst b { width: 7px; height: 7px; border-radius: 50%; background: #3fbf7f; box-shadow: 0 0 10px #3fbf7f; animation: puls 2.4s infinite; }
+  .dienst.down b { background: var(--rot); box-shadow: 0 0 10px var(--rot); }
+  .dienst em { margin-left: auto; font-style: normal; opacity: .45; letter-spacing: .1em; }
+  @keyframes puls { 50% { opacity: .35; } }
+</style>
+</head>
+<body>
+<canvas id="feld"></canvas>
+<canvas id="korn"></canvas>
+
+<div id="hud" class="links">
+  <div class="ecke l" id="eckeL">UMBRA · Zeit</div>
+  <div class="seite">
+    <div class="klein" id="kw"></div>
+    <div class="grossuhr" id="zeit"></div>
+    <div class="tag" id="datum"></div>
+    <div class="klein">Tag vergangen · <span class="rot" id="prozent"></span></div>
+    <div class="balken"><i id="fortschritt"></i></div>
+    <div class="klein status" id="status">Alles unter Kontrolle.</div>
+  </div>
+</div>
+<script>
+"use strict";
+// Einstellungen (Wallpaper Engine überschreibt sie über die Eigenschaften im Editor)
+const opt = { tempo: 1, maus: true, musik: true, uhr: true, texte: true, laser: true, fps: 30 };
+
+// ---------- Simplex-Rauschen 3D (kompakt) ----------
+const noise3 = (() => {
+  const g = [[1,1,0],[-1,1,0],[1,-1,0],[-1,-1,0],[1,0,1],[-1,0,1],[1,0,-1],[-1,0,-1],[0,1,1],[0,-1,1],[0,1,-1],[0,-1,-1]];
+  const p = new Uint8Array(512); const base = new Uint8Array(256);
+  for (let i = 0; i < 256; i++) base[i] = i;
+  let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = 255; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [base[i], base[j]] = [base[j], base[i]]; }
+  for (let i = 0; i < 512; i++) p[i] = base[i & 255];
+  const F3 = 1 / 3, G3 = 1 / 6;
+  return (x, y, z) => {
+    const t = (x + y + z) * F3, i = Math.floor(x + t), j = Math.floor(y + t), k = Math.floor(z + t);
+    const u = (i + j + k) * G3, x0 = x - i + u, y0 = y - j + u, z0 = z - k + u;
+    let i1, j1, k1, i2, j2, k2;
+    if (x0 >= y0) { if (y0 >= z0) { i1=1;j1=0;k1=0;i2=1;j2=1;k2=0; } else if (x0 >= z0) { i1=1;j1=0;k1=0;i2=1;j2=0;k2=1; } else { i1=0;j1=0;k1=1;i2=1;j2=0;k2=1; } }
+    else { if (y0 < z0) { i1=0;j1=0;k1=1;i2=0;j2=1;k2=1; } else if (x0 < z0) { i1=0;j1=1;k1=0;i2=0;j2=1;k2=1; } else { i1=0;j1=1;k1=0;i2=1;j2=1;k2=0; } }
+    const x1 = x0 - i1 + G3, y1 = y0 - j1 + G3, z1 = z0 - k1 + G3;
+    const x2 = x0 - i2 + 2 * G3, y2 = y0 - j2 + 2 * G3, z2 = z0 - k2 + 2 * G3;
+    const x3 = x0 - 1 + 0.5, y3 = y0 - 1 + 0.5, z3 = z0 - 1 + 0.5;
+    const ii = i & 255, jj = j & 255, kk = k & 255;
+    const c = (gi, X, Y, Z) => { let t = 0.6 - X*X - Y*Y - Z*Z; if (t < 0) return 0; t *= t; const v = g[gi % 12]; return t * t * (v[0]*X + v[1]*Y + v[2]*Z); };
+    return 32 * (c(p[ii + p[jj + p[kk]]], x0, y0, z0) + c(p[ii + i1 + p[jj + j1 + p[kk + k1]]], x1, y1, z1)
+      + c(p[ii + i2 + p[jj + j2 + p[kk + k2]]], x2, y2, z2) + c(p[ii + 1 + p[jj + 1 + p[kk + 1]]], x3, y3, z3));
+  };
+})();
+
+// ---------- Höhenlinien ----------
+const cv = document.getElementById("feld"), ctx = cv.getContext("2d");
+const kv = document.getElementById("korn"), kctx = kv.getContext("2d");
+let W, H, CELL, GW, GH, field;
+const LEVELS = 22;
+
+function resize() {
+  W = cv.width = kv.width = innerWidth; H = cv.height = kv.height = innerHeight;
+  CELL = Math.max(8, Math.round(Math.min(W, H) / 110));
+  GW = Math.ceil(W / CELL) + 1; GH = Math.ceil(H / CELL) + 1;
+  field = new Float32Array(GW * GH);
+}
+addEventListener("resize", resize); resize();
+
+// Maus (Wallpaper Engine gibt sie an Web-Hintergründe weiter): Linien weichen dem Zeiger sanft aus
+const maus = { x: -1e4, y: -1e4, sx: -1e4, sy: -1e4 };
+addEventListener("mousemove", (e) => { maus.x = e.clientX; maus.y = e.clientY; });
+
+// Musik (Wallpaper Engine Audio): Bass lässt das Feld atmen
+let bass = 0;
+if (window.wallpaperRegisterAudioListener) {
+  window.wallpaperRegisterAudioListener((a) => {
+    let sum = 0; for (let i = 0; i < 6; i++) sum += a[i] + a[i + 64];
+    bass = bass * 0.6 + Math.min(1, sum / 6) * 0.4;
+  });
+}
+
+function fill(t) {
+  const mr = Math.min(W, H) * 0.16, mr2 = mr * mr;
+  const amp = 1 + (opt.musik ? bass * 0.35 : 0);
+  for (let y = 0; y < GH; y++) {
+    for (let x = 0; x < GW; x++) {
+      const px = x * CELL + -1920, py = y * CELL;
+      let v = noise3(px * 0.0016, py * 0.0016, t) * 0.72 + noise3(px * 0.0042 + 40, py * 0.0042, t * 1.6) * 0.28;
+      v *= amp;
+      if (opt.maus) {
+        const dx = px - -1920 - maus.sx, dy = py - maus.sy, d2 = dx * dx + dy * dy;
+        if (d2 < mr2 * 4) v += 0.55 * Math.exp(-d2 / mr2);
+      }
+      field[y * GW + x] = v;
+    }
+  }
+
+}
+
+// Marching Squares: pro Höhe ein Pfad
+function contours(level) {
+  ctx.beginPath();
+  for (let y = 0; y < GH - 1; y++) {
+    const r = y * GW, r2 = r + GW, py = y * CELL;
+    for (let x = 0; x < GW - 1; x++) {
+      const a = field[r + x], b = field[r + x + 1], c = field[r2 + x + 1], d = field[r2 + x];
+      const idx = (a > level ? 8 : 0) | (b > level ? 4 : 0) | (c > level ? 2 : 0) | (d > level ? 1 : 0);
+      if (idx === 0 || idx === 15) continue;
+      const px = x * CELL;
+      const top = () => [px + CELL * (level - a) / (b - a), py];
+      const right = () => [px + CELL, py + CELL * (level - b) / (c - b)];
+      const bottom = () => [px + CELL * (level - d) / (c - d), py + CELL];
+      const left = () => [px, py + CELL * (level - a) / (d - a)];
+      const seg = (p, q) => { ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); };
+      switch (idx) {
+        case 1: case 14: seg(left(), bottom()); break;
+        case 2: case 13: seg(bottom(), right()); break;
+        case 3: case 12: seg(left(), right()); break;
+        case 4: case 11: seg(top(), right()); break;
+        case 6: case 9: seg(top(), bottom()); break;
+        case 7: case 8: seg(left(), top()); break;
+        case 5: seg(left(), top()); seg(bottom(), right()); break;
+        case 10: seg(left(), bottom()); seg(top(), right()); break;
+      }
+    }
+  }
+}
+
+// Filmkorn: einmal erzeugen, jedes Bild zufällig verschieben
+const grain = document.createElement("canvas"); grain.width = grain.height = 256;
+(() => { const g = grain.getContext("2d"), img = g.createImageData(256, 256);
+  for (let i = 0; i < img.data.length; i += 4) { const v = Math.random() * 255; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 13; }
+  g.putImageData(img, 0, 0); })();
+
+let last = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (now - last < 1000 / opt.fps) return;
+  last = now;
+  const t = (Date.now() / 1000 % 100000) * 0.035 * opt.tempo;
+  maus.sx += (maus.x - maus.sx) * 0.06; maus.sy += (maus.y - maus.sy) * 0.06;
+
+  fill(t);
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#070304"; ctx.fillRect(0, 0, W, H);
+  ctx.lineCap = "round";
+  for (let i = 0; i < LEVELS; i++) {
+    const level = -0.95 + (1.9 * i) / (LEVELS - 1);
+    const major = i % 5 === 2;
+    ctx.lineWidth = major ? 1.4 : 0.8;
+    ctx.strokeStyle = major ? `rgba(196,42,49,${0.55 + (opt.musik ? bass * 0.4 : 0)})` : "rgba(122,30,36,0.32)";
+    contours(level); ctx.stroke();
+  }
+
+  // Laser: rotes Band tastet langsam von oben nach unten ab und hebt die Linien darunter hervor
+  if (opt.laser) {
+    const period = 16, ph = (Date.now() / 1000 % period) / period;
+    const ly = -H * 0.1 + ph * H * 1.2, band = H * 0.07;
+    ctx.globalCompositeOperation = "lighter";
+    const gr = ctx.createLinearGradient(0, ly - band, 0, ly + band);
+    gr.addColorStop(0, "rgba(196,42,49,0)"); gr.addColorStop(0.5, "rgba(196,42,49,0.10)"); gr.addColorStop(1, "rgba(196,42,49,0)");
+    ctx.fillStyle = gr; ctx.fillRect(0, ly - band, W, band * 2);
+    ctx.fillStyle = "rgba(224,86,92,0.5)"; ctx.fillRect(0, ly, W, 1);
+  }
+
+  // Vignette
+  ctx.globalCompositeOperation = "source-over";
+  const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.25, W / 2, H / 2, Math.max(W, H) * 0.75);
+  vg.addColorStop(0, "rgba(7,3,4,0)"); vg.addColorStop(1, "rgba(7,3,4,0.88)");
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+
+  kctx.clearRect(0, 0, W, H);
+  kctx.save(); kctx.translate(-Math.random() * 256, -Math.random() * 256);
+  kctx.fillStyle = kctx.createPattern(grain, "repeat"); kctx.fillRect(0, 0, W + 256, H + 256); kctx.restore();
+}
+requestAnimationFrame(frame);
+
+
+const zeit = document.getElementById("zeit"), datum = document.getElementById("datum"), status = document.getElementById("status");
+const STATUS = ["Alles unter Kontrolle.", "Die Familie schläft nie.", "Niemand kommt rein.", "Sektor ruhig.", "Wir sehen alles."];
+let si = 0;
+function kw(d) { const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const n = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - n); const y = new Date(Date.UTC(t.getUTCFullYear(), 0, 1)); return Math.ceil(((t - y) / 864e5 + 1) / 7); }
+function tick() {
+  const d = new Date(), p2 = (n) => String(n).padStart(2, "0");
+  zeit.innerHTML = p2(d.getHours()) + ":" + p2(d.getMinutes()) + '<span class="sek">' + p2(d.getSeconds()) + "</span>";
+  datum.textContent = d.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
+  document.getElementById("kw").textContent = "Kalenderwoche " + kw(d) + " · " + d.getFullYear();
+  const pct = ((d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds()) / 864) | 0;
+  document.getElementById("prozent").textContent = pct + " %";
+  document.getElementById("fortschritt").style.width = pct + "%";
+}
+setInterval(tick, 1000); tick();
+setInterval(() => { status.style.opacity = 0; setTimeout(() => { si = (si + 1) % STATUS.length; status.textContent = STATUS[si]; status.style.opacity = 0.9; }, 1200); }, 9000);
+function apply() { document.getElementById("eckeL").classList.toggle("aus", !opt.texte); }
+
+// ---------- Wallpaper Engine Eigenschaften ----------
+window.wallpaperPropertyListener = {
+  applyUserProperties(p) {
+    if (p.tempo) opt.tempo = p.tempo.value;
+    if (p.maus) opt.maus = p.maus.value;
+    if (p.musik) opt.musik = p.musik.value;
+    if (p.uhr) opt.uhr = p.uhr.value;
+    if (p.texte) opt.texte = p.texte.value;
+    if (p.laser) opt.laser = p.laser.value;
+    apply();
+  },
+  applyGeneralProperties(p) { if (p.fps) opt.fps = Math.max(10, Math.min(60, p.fps)); },
+};
+apply();
+</script>
+</body>
+</html>
