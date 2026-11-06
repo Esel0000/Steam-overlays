@@ -37,17 +37,19 @@ const NUR_MOD = `chan:${MOD.join(',')}`
 const NAME = 'regwi:@?(esel(_?99|_?8i)?|basler|pasa ?paco|pasa|pruda(_?031)?)'
 
 // ncat: = Kategorie für Benachrichtigungen (Ton nur bei Erwähnung und Blacklist)
+// Nur die Namen gelten in allen Chats. Alles andere nur in den Mod-Kanälen, sonst fluten große Kanäle
+// (z. B. xRohat, MontanaBlack) den Tab "Wichtig" mit Erstschreibern, Subs und "@chat".
 const HIGHLIGHT = [
   `ncat:erwaehnung ${NAME}`,
-  'regwi:@chat|@mods|@staff|@admin',
-  'config:firstmsg',
-  'config:info regi:(is gifting|gifted|subscribed|resubscribed|\\[Raid\\])',
-  'config:info +regi:donated|tipped|spende',
-  'config:t|bits',
+  `${NUR_MOD} regwi:@chat|@mods|@staff|@admin`,
+  `${NUR_MOD} config:firstmsg`,
+  `${NUR_MOD} config:info regi:(is gifting|gifted|subscribed|resubscribed|\\[Raid\\])`,
+  `${NUR_MOD} config:info +regi:donated|tipped|spende`,
+  `${NUR_MOD} config:t|bits`,
   `ncat:blacklist ${NUR_MOD} ${HASS}`,
   `ncat:blacklist ${NUR_MOD} ${SCAM}`,
   // Banns und Timeouts landen so auch im Highlight-Fenster
-  'config:info regi:\\[ModAction\\].*(ban|timeout|timed out|gesperrt)',
+  `${NUR_MOD} config:info regi:\\[ModAction\\].*(ban|timeout|timed out|gesperrt)`,
 ]
 
 // Muster,Schriftfarbe/an/Hintergrund/an. Bewusst sparsam: normaler Text bleibt neutral,
@@ -83,9 +85,9 @@ const UMBRA = {
   // Eigene Tabs (Chatty ab 0.26): Kopien wichtiger Nachrichten landen zusätzlich in "Wichtig" und "Blacklist"
   routing: [
     `to:Wichtig ${NAME}`,
-    'to:Wichtig regwi:@chat|@mods|@staff|@admin',
-    'to:Wichtig config:firstmsg',
-    'to:Wichtig config:info regi:(is gifting|gifted|subscribed|resubscribed|\\[Raid\\]|donated|tipped)',
+    `to:Wichtig ${NUR_MOD} regwi:@chat|@mods|@staff|@admin`,
+    `to:Wichtig ${NUR_MOD} config:firstmsg`,
+    `to:Wichtig ${NUR_MOD} config:info regi:(is gifting|gifted|subscribed|resubscribed|\\[Raid\\]|donated|tipped)`,
     `to:Blacklist ${NUR_MOD} ${HASS}`,
     `to:Blacklist ${NUR_MOD} ${SCAM}`,
   ],
