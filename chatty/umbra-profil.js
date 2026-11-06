@@ -9,6 +9,8 @@ const { execFileSync } = require('child_process')
 
 const ALT = path.join(os.homedir(), '.chatty', 'settings')
 const ZIEL = path.join(os.homedir(), '.chatty-umbra')
+// Gemeinsame Bann-Gründe und Befehle für Chatty und Chatterino
+const BANNS = require('../bann-gruende.json')
 
 // ---------- UMBRA-Farben ----------
 const F = {
@@ -78,7 +80,7 @@ const UMBRA = {
   highlightEnabled: true, highlight: HIGHLIGHT, highlightOwnText: false, highlightMatches: true,
   msgColorsEnabled: true, msgColorsPrefer: true, msgColors: MSG_COLORS,
   // Moderation (deutsch)
-  banReasons: 'Spam\nScam-Link\nHass / Beleidigung\nBann umgehen\nFremdwerbung\nSpoiler / Backseat',
+  banReasons: BANNS.filter(b => !b.dauer).map(b => b.grund).join('\n'),
   // Kanal und Tabs
   // onStart 2: verbinden und den Kanälen aus "channel" beitreten (nicht den zuletzt offenen)
   channel: [...MOD, ...MITLESEN].join(', '), onStart: 2, tabsPlacement: 'top',
@@ -106,7 +108,7 @@ const UMBRA = {
     'Löschen[1]=/delete $$(msg-id)',
     '.1s, 1m[2], 10m[3], 1h[4], 1d[5], 7d[7], /Ban[B], /Unban[U]',
     '@a2',
-    './Spam[S]', './Scam-Link[L]', './Beleidigung[H]', './Bann umgehen', './Fremdwerbung[F]',
+    './Trolling[T]', './Spam[S]', './Scam-Link[L]', './Beleidigung[H]', './Bann umgehen', './Fremdwerbung[F]',
     '.Verwarnen[W]=/warn $$1 Bitte halte dich an die Regeln.',
     '.Mod-Karte=/card $$1',
     '',
@@ -155,6 +157,10 @@ basis.roomFavorites ??= {}
 for (const k of [...MOD, ...MITLESEN]) basis.roomFavorites['#' + k] ??= [Date.now(), false]
 for (const k of Object.keys(basis)) if (/token|login|pass|secret|oauth/i.test(k)) delete basis[k]
 const neu = { ...basis, ...UMBRA }
+// Bann-Befehle (/troll name, /spam name …) zu den vorhandenen eigenen Befehlen hinzufügen, gleichnamige ersetzen
+const eigene = BANNS.map(b => `${b.befehl} ${b.dauer ? `/timeout $$1 ${b.dauer} ${b.grund}` : `/ban $$1 ${b.grund}`}`)
+const namen = new Set(BANNS.map(b => b.befehl.toLowerCase()))
+neu.commands = [...(basis.commands ?? []).filter(c => !namen.has(String(c).split(' ')[0].toLowerCase())), ...eigene]
 
 fs.mkdirSync(ZIEL, { recursive: true })
 const datei = path.join(ZIEL, 'settings')

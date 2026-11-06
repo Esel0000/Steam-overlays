@@ -1,0 +1,20 @@
+[
+  { "befehl": "/troll", "grund": "Trolling" },
+  { "befehl": "/spam", "grund": "Spam" },
+  { "befehl": "/scam", "grund": "Scam / Phishing-Link" },
+  { "befehl": "/hass", "grund": "Hass / Beleidigung" },
+  { "befehl": "/rassismus", "grund": "Rassismus / Diskriminierung" },
+  { "befehl": "/umgehen", "grund": "Bann umgehen (Zweitaccount)" },
+  { "befehl": "/werbung", "grund": "Fremdwerbung" },
+  { "befehl": "/belaestigung", "grund": "Belästigung" },
+  { "befehl": "/sexuell", "grund": "Sexuelle Inhalte" },
+  { "befehl": "/drohung", "grund": "Drohung" },
+  { "befehl": "/doxx", "grund": "Doxxing (persönliche Daten)" },
+  { "befehl": "/bot", "grund": "Bot / Viewbot" },
+  { "befehl": "/wiederholt", "grund": "Wiederholte Regelverstöße" },
+  { "befehl": "/verwarn", "grund": "Verwarnung: bitte Regeln beachten", "dauer": 60 },
+  { "befehl": "/spoiler", "grund": "Spoiler / Backseat", "dauer": 600 },
+  { "befehl": "/caps", "grund": "Caps / Emote-Spam", "dauer": 300 },
+  { "befehl": "/streit", "grund": "Streit im Chat", "dauer": 1800 },
+  { "befehl": "/trolltime", "grund": "Trolling", "dauer": 3600 }
+]
