@@ -31,15 +31,16 @@ const NUR_MOD = `chan:${MOD.join(',')}`
 // Namen und Stichwörter, die immer auffallen sollen
 const NAME = 'regwi:@?(esel(_?99|_?8i)?|basler|pasa ?paco|pasa|pruda(_?031)?)'
 
+// ncat: = Kategorie für Benachrichtigungen (Ton nur bei Erwähnung und Blacklist)
 const HIGHLIGHT = [
-  NAME,
+  `ncat:erwaehnung ${NAME}`,
   'regwi:@chat|@mods|@staff|@admin',
   'config:firstmsg',
   'config:info regi:(is gifting|gifted|subscribed|resubscribed|\\[Raid\\])',
   'config:info +regi:donated|tipped|spende',
   'config:t|bits',
-  `${NUR_MOD} ${HASS}`,
-  `${NUR_MOD} ${SCAM}`,
+  `ncat:blacklist ${NUR_MOD} ${HASS}`,
+  `ncat:blacklist ${NUR_MOD} ${SCAM}`,
   // Banns und Timeouts landen so auch im Highlight-Fenster
   'config:info regi:\\[ModAction\\].*(ban|timeout|timed out|gesperrt)',
 ]
@@ -73,7 +74,7 @@ const UMBRA = {
   banReasons: 'Spam\nScam-Link\nHass / Beleidigung\nBann umgehen\nFremdwerbung\nSpoiler / Backseat',
   // Kanal und Tabs
   // onStart 2: verbinden und den Kanälen aus "channel" beitreten (nicht den zuletzt offenen)
-  channel: [...MOD, ...MITLESEN].join(', '), onStart: 2, tabsPlacement: 'top', roomFavorites: {}, channelHistory: {},
+  channel: [...MOD, ...MITLESEN].join(', '), onStart: 2, tabsPlacement: 'top',
   // Eigene Tabs (Chatty ab 0.26): Kopien wichtiger Nachrichten landen zusätzlich in "Wichtig" und "Blacklist"
   routing: [
     `to:Wichtig ${NAME}`,
@@ -88,6 +89,34 @@ const UMBRA = {
   historyServiceEnabled: true,
   // Schreibtricks wie hur3ns0hn oder h.u.r.e.n.s.o.h.n erkennen
   matchingSubstitutesEnabled: true,
+  // Spam-Erkennung: gleiche Nachricht 3x innerhalb von 10 Minuten wird markiert (Mods ausgenommen)
+  repeatMsg: true, repeatMsgRep: 3, repeatMsgTime: 600,
+  // Emotes eine Spur kleiner, damit die Zeilen ruhig bleiben
+  emoteScale: 90,
+  // Mod-Knöpfe im Nutzerfenster (Zeichen in [] = Taste)
+  timeoutButtons: [
+    '@a1',
+    'Löschen[1]=/delete $$(msg-id)',
+    '.1s, 1m[2], 10m[3], 1h[4], 1d[5], 7d[7], /Ban[B], /Unban[U]',
+    '@a2',
+    './Spam[S]', './Scam-Link[L]', './Beleidigung[H]', './Bann umgehen', './Fremdwerbung[F]',
+    '.Verwarnen[W]=/warn $$1 Bitte halte dich an die Regeln.',
+    '.Mod-Karte=/card $$1',
+    '',
+    '@AutoMod',
+    '.Erlauben[A]=/Automod_approve', '.Ablehnen=/Automod_deny',
+  ].join('\n'),
+  // Rechtsklick auf einen Namen
+  userContextMenu: [
+    'Verwarnen=/warn $$1 Bitte halte dich an die Regeln.',
+    'Shoutout=/shoutout $$1',
+    'Mod-Karte=/card $$1',
+    'Nachrichten anzeigen=/userinfo $$1',
+    '-',
+    'Mod Lookup=/modlookup $$1',
+    'Melden=/report $$1',
+    'Übersetzen=/translate',
+  ].join('\n'),
 }
 
 // Basis: das bestehende UMBRA-Profil (damit eigene Änderungen bleiben), beim ersten Mal das alte Chatty-Profil
@@ -100,6 +129,8 @@ basis.noHighlightUsers = [...new Set([...(basis.noHighlightUsers ?? []), 'fossab
 const erlaubt = new Set([...MOD, ...MITLESEN].map(k => '#' + k))
 const fremd = (JSON.stringify(basis.layouts ?? {}).match(/"#[^"]+"/g) ?? []).some(k => !erlaubt.has(k.slice(1, -1).toLowerCase()))
 if (quelle === ALT || fremd) basis.layouts = {}
+// Favoriten und Verlauf aus dem alten Profil (fremde Kanäle) nicht übernehmen, eigene im UMBRA-Profil behalten
+if (quelle === ALT) { basis.roomFavorites = {}; basis.channelHistory = {} }
 for (const k of Object.keys(basis)) if (/token|login|pass|secret|oauth/i.test(k)) delete basis[k]
 const neu = { ...basis, ...UMBRA }
 
