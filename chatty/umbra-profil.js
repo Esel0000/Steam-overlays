@@ -148,6 +148,9 @@ else aufraeumen(basis.layouts)
 // Favoriten: aus dem alten Profil nichts übernehmen; im UMBRA-Profil nur Kanäle behalten, die noch in der Liste stehen
 if (quelle === ALT) { basis.roomFavorites = {}; basis.channelHistory = {} }
 else for (const k of Object.keys(basis.roomFavorites ?? {})) if (istFremd(k)) delete basis.roomFavorites[k]
+// Alle Kanäle der Liste sind Favoriten, damit die Live-Liste (Strg+L, "Nur Favoriten") genau sie zeigt
+basis.roomFavorites ??= {}
+for (const k of [...MOD, ...MITLESEN]) basis.roomFavorites['#' + k] ??= [Date.now(), false]
 for (const k of Object.keys(basis)) if (/token|login|pass|secret|oauth/i.test(k)) delete basis[k]
 const neu = { ...basis, ...UMBRA }
 
