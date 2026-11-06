@@ -22,6 +22,12 @@ const F = {
 const HASS = 'regwi:(hurensohn|huso|missgeburt|spast|spasti|(du|bist du|seid ihr|ihr) behindert|mongo|schwuchtel|transe|fotze|kanake|zigeuner|n[i1!]gg(a|er|ah)|f[a@]gg?ot|retard|kys|kill yourself|bring dich um)'
 // Scam und Fremdwerbung: gelb markiert + Hervorhebung
 const SCAM = 'regi:((free|gratis|kostenlos).{0,25}(followers?|viewers?|zuschauer|nitro)|(cheap|billig|buy|kauf).{0,25}(followers?|viewers?|zuschauer|primes?|subs?)|dogehype|streamboo|bigfollows|followkings|viewerboost|twitchboost|onlyfans|nudes|steamcommunity\.(ru|cc)|discordnitro|nitro.{0,10}(free|gift))'
+// Kanäle (Stand 06.11.2026): MOD = dein Kanal + Mod-Kanäle, die du auch verfolgst (Twitch-Mod-Liste, gefolgt, Chatty-Logs)
+// MITLESEN = nur zuschauen, dort keine Blacklist und keine Blacklist-Highlights
+const MOD = ['esel_99', 'kasab329', 'basler20', 'kokofnr', '1jeffryy', 'mellivlne', 'reno_manchester', 'prinz_yache', '3lionx_', 'xysemih']
+const MITLESEN = ['jiyovollkontakt']
+const NUR_MOD = `chan:${MOD.join(',')}`
+
 // Namen und Stichwörter, die immer auffallen sollen
 const NAME = 'regwi:@?(esel(_?99|_?8i)?|basler|pasa ?paco|pasa|pruda(_?031)?)'
 
@@ -32,8 +38,8 @@ const HIGHLIGHT = [
   'config:info regi:(is gifting|gifted|subscribed|resubscribed|\\[Raid\\])',
   'config:info +regi:donated|tipped|spende',
   'config:t|bits',
-  HASS,
-  SCAM,
+  `${NUR_MOD} ${HASS}`,
+  `${NUR_MOD} ${SCAM}`,
   // Banns und Timeouts landen so auch im Highlight-Fenster
   'config:info regi:\\[ModAction\\].*(ban|timeout|timed out|gesperrt)',
 ]
@@ -67,16 +73,15 @@ const UMBRA = {
   banReasons: 'Spam\nScam-Link\nHass / Beleidigung\nBann umgehen\nFremdwerbung\nSpoiler / Backseat',
   // Kanal und Tabs
   // onStart 2: verbinden und den Kanälen aus "channel" beitreten (nicht den zuletzt offenen)
-  // Eigener Kanal plus die Kanäle, in denen du Mod bist (laut Chat-Logs bis 22.10.2026)
-  channel: 'esel_99, kasab329, 1jeffryy, descarlito, emiliaperry', onStart: 2, tabsPlacement: 'top', roomFavorites: {}, channelHistory: {},
+  channel: [...MOD, ...MITLESEN].join(', '), onStart: 2, tabsPlacement: 'top', roomFavorites: {}, channelHistory: {},
   // Eigene Tabs (Chatty ab 0.26): Kopien wichtiger Nachrichten landen zusätzlich in "Wichtig" und "Blacklist"
   routing: [
     `to:Wichtig ${NAME}`,
     'to:Wichtig regwi:@chat|@mods|@staff|@admin',
     'to:Wichtig config:firstmsg',
     'to:Wichtig config:info regi:(is gifting|gifted|subscribed|resubscribed|\\[Raid\\]|donated|tipped)',
-    `to:Blacklist ${HASS}`,
-    `to:Blacklist ${SCAM}`,
+    `to:Blacklist ${NUR_MOD} ${HASS}`,
+    `to:Blacklist ${NUR_MOD} ${SCAM}`,
   ],
   routingMulti: true,
   // Beim Betreten die letzten Nachrichten (bis 24 h) nachladen, praktisch nach einem Neustart
@@ -92,7 +97,9 @@ const basis = fs.existsSync(quelle) ? JSON.parse(fs.readFileSync(quelle, 'utf8')
 // Bots lösen nie ein Highlight aus (bestehende Einträge bleiben)
 basis.noHighlightUsers = [...new Set([...(basis.noHighlightUsers ?? []), 'fossabot', 'streamelements', 'nightbot'])]
 // Fenster-Layout mit fremden Kanälen verwerfen, damit nur esel_99 (plus eigene Tabs) aufgeht
-if (quelle === ALT || /"#(?!(esel_99|kasab329|1jeffryy|descarlito|emiliaperry)")[^"]+"/.test(JSON.stringify(basis.layouts ?? {}))) basis.layouts = {}
+const erlaubt = new Set([...MOD, ...MITLESEN].map(k => '#' + k))
+const fremd = (JSON.stringify(basis.layouts ?? {}).match(/"#[^"]+"/g) ?? []).some(k => !erlaubt.has(k.slice(1, -1).toLowerCase()))
+if (quelle === ALT || fremd) basis.layouts = {}
 for (const k of Object.keys(basis)) if (/token|login|pass|secret|oauth/i.test(k)) delete basis[k]
 const neu = { ...basis, ...UMBRA }
 
