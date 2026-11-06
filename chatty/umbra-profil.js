@@ -24,8 +24,13 @@ const HASS = 'regwi:(hurensohn|huso|missgeburt|spast|spasti|(du|bist du|seid ihr
 const SCAM = 'regi:((free|gratis|kostenlos).{0,25}(followers?|viewers?|zuschauer|nitro)|(cheap|billig|buy|kauf).{0,25}(followers?|viewers?|zuschauer|primes?|subs?)|dogehype|streamboo|bigfollows|followkings|viewerboost|twitchboost|onlyfans|nudes|steamcommunity\.(ru|cc)|discordnitro|nitro.{0,10}(free|gift))'
 // Kanäle (Stand 06.11.2026): MOD = dein Kanal + Mod-Kanäle, die du auch verfolgst (Twitch-Mod-Liste, gefolgt, Chatty-Logs)
 // MITLESEN = nur zuschauen, dort keine Blacklist und keine Blacklist-Highlights
-const MOD = ['esel_99', 'kasab329', 'basler20', 'kokofnr', '1jeffryy', 'mellivlne', 'reno_manchester', 'prinz_yache', '3lionx_', 'xysemih']
-const MITLESEN = ['jiyovollkontakt']
+// Liste vom User am 06.11.2026 vorgegeben; Mod laut twitch.tv/moderator: restinpeace10, basler20, mellivlne
+const MOD = ['esel_99', 'restinpeace10', 'basler20', 'mellivlne']
+const MITLESEN = [
+  'elias97', 'montanblack88', 'holyzuhla', 'xrohat', 'kerem_xtr', '17kaiser', 'inoiizy', 'armanibelfort',
+  'emiliaperry', 'sarialivetv', 'ksfreak', 'pauiinski', 'therealknossi', 'unfair', 'kevinpannewitz',
+  'cherrykiss__', 'hashloco', 'fabse304', 'justbeeingeli', 'itsmeclaiire',
+]
 const NUR_MOD = `chan:${MOD.join(',')}`
 
 // Namen und Stichwörter, die immer auffallen sollen
@@ -125,13 +130,24 @@ const quelle = fs.existsSync(UMBRA_DATEI) ? UMBRA_DATEI : ALT
 const basis = fs.existsSync(quelle) ? JSON.parse(fs.readFileSync(quelle, 'utf8')) : {}
 // Bots lösen nie ein Highlight aus (bestehende Einträge bleiben)
 basis.noHighlightUsers = [...new Set([...(basis.noHighlightUsers ?? []), 'fossabot', 'streamelements', 'nightbot'])]
-// Fenster-Layout mit fremden Kanälen verwerfen, damit nur esel_99 (plus eigene Tabs) aufgeht
-// Eigene Tabs (Blacklist, Wichtig) und angedockte Fenster gehören zum Layout und bleiben erhalten
+// Layout: nur Kanal-Tabs entfernen, die nicht mehr in der Liste stehen. Aufteilung, angedockte Fenster
+// und eigene Tabs (Blacklist, Wichtig, Live, Moderationsprotokoll) bleiben, wie du sie eingerichtet hast.
 const erlaubt = new Set([...MOD, ...MITLESEN, 'blacklist', 'wichtig'].map(k => '#' + k))
-const fremd = (JSON.stringify(basis.layouts ?? {}).match(/"#[^"]+"/g) ?? []).some(k => !erlaubt.has(k.slice(1, -1).toLowerCase()))
-if (quelle === ALT || fremd) basis.layouts = {}
-// Favoriten und Verlauf aus dem alten Profil (fremde Kanäle) nicht übernehmen, eigene im UMBRA-Profil behalten
+const istFremd = (n) => typeof n === 'string' && n.startsWith('#') && !erlaubt.has(n.toLowerCase())
+function aufraeumen(knoten) {
+  if (Array.isArray(knoten)) {
+    if (knoten[0] === 't' && Array.isArray(knoten[1])) {
+      knoten[1] = knoten[1].filter(n => !istFremd(n))
+      if (istFremd(knoten[2])) knoten[2] = knoten[1][0] ?? null
+    }
+    knoten.forEach(aufraeumen)
+  } else if (knoten && typeof knoten === 'object') Object.values(knoten).forEach(aufraeumen)
+}
+if (quelle === ALT) basis.layouts = {}
+else aufraeumen(basis.layouts)
+// Favoriten: aus dem alten Profil nichts übernehmen; im UMBRA-Profil nur Kanäle behalten, die noch in der Liste stehen
 if (quelle === ALT) { basis.roomFavorites = {}; basis.channelHistory = {} }
+else for (const k of Object.keys(basis.roomFavorites ?? {})) if (istFremd(k)) delete basis.roomFavorites[k]
 for (const k of Object.keys(basis)) if (/token|login|pass|secret|oauth/i.test(k)) delete basis[k]
 const neu = { ...basis, ...UMBRA }
 
