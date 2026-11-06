@@ -126,7 +126,8 @@ const basis = fs.existsSync(quelle) ? JSON.parse(fs.readFileSync(quelle, 'utf8')
 // Bots lösen nie ein Highlight aus (bestehende Einträge bleiben)
 basis.noHighlightUsers = [...new Set([...(basis.noHighlightUsers ?? []), 'fossabot', 'streamelements', 'nightbot'])]
 // Fenster-Layout mit fremden Kanälen verwerfen, damit nur esel_99 (plus eigene Tabs) aufgeht
-const erlaubt = new Set([...MOD, ...MITLESEN].map(k => '#' + k))
+// Eigene Tabs (Blacklist, Wichtig) und angedockte Fenster gehören zum Layout und bleiben erhalten
+const erlaubt = new Set([...MOD, ...MITLESEN, 'blacklist', 'wichtig'].map(k => '#' + k))
 const fremd = (JSON.stringify(basis.layouts ?? {}).match(/"#[^"]+"/g) ?? []).some(k => !erlaubt.has(k.slice(1, -1).toLowerCase()))
 if (quelle === ALT || fremd) basis.layouts = {}
 // Favoriten und Verlauf aus dem alten Profil (fremde Kanäle) nicht übernehmen, eigene im UMBRA-Profil behalten
